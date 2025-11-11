@@ -142,6 +142,43 @@ def get_google_model() -> GoogleModel:
         )
 
 
+def get_openrouter_model() -> OpenAIModel:
+    """Configure OpenRouter model with proper error handling
+    
+    OpenRouter provides a unified API compatible with OpenAI's interface,
+    giving access to multiple LLM providers through a single endpoint.
+    """
+    try:
+        settings = get_settings()
+        # OpenRouter uses a fixed base URL
+        base_url = settings.openrouter_base_url
+
+        logger.info(f"Using OpenRouter base URL: {base_url}")
+
+        # Get API key from settings or environment
+        api_key = settings.openrouter_api_key or os.getenv("OPENROUTER_API_KEY")
+
+        if not api_key:
+            raise ConfigurationException(
+                message="OpenRouter API key not found",
+                config_key="openrouter_api_key",
+                details={"model_name": settings.openrouter_model_name},
+            )
+
+        # Create OpenAI-compatible client with OpenRouter base URL
+        client = AsyncOpenAI(api_key=api_key, base_url=base_url)
+        provider = OpenAIProvider(openai_client=client)
+        return OpenAIModel(settings.openrouter_model_name, provider=provider)
+    except Exception as e:
+        logger.error(f"Failed to initialize OpenRouter model: {e}")
+        raise AIProviderException(
+            message="Failed to initialize OpenRouter model",
+            provider="openrouter",
+            model=settings.openrouter_model_name,
+            original_error=e,
+        )
+
+
 def get_llm_model(model_name: Optional[str] = None) -> Union[Model, FallbackModel]:
     """
     Get configured LLM model based on settings
@@ -162,6 +199,8 @@ def get_llm_model(model_name: Optional[str] = None) -> Union[Model, FallbackMode
         return get_anthropic_model()
     elif model_name.startswith("gemini:"):
         return get_google_model()
+    elif model_name.startswith("openrouter:"):
+        return get_openrouter_model()
 
     # Fallback configuration for multiple providers
     elif model_name == "fallback":
@@ -178,6 +217,8 @@ def get_llm_model(model_name: Optional[str] = None) -> Union[Model, FallbackMode
             or os.getenv("GEMINI_API_KEY")
         ):
             models.append(f"google-gla:{settings.gemini_model_name}")
+        if settings.openrouter_api_key or os.getenv("OPENROUTER_API_KEY"):
+            models.append(f"openrouter:{settings.openrouter_model_name}")
 
         if not models:
             raise ConfigurationException(

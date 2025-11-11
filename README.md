@@ -12,7 +12,7 @@ An **enterprise-grade**, AI-powered code review agent that integrates seamlessly
 ## 🌟 Features
 
 ### Core Capabilities
-- **Multi-LLM Support**: Works with OpenAI GPT-4, Anthropic Claude, and Google Gemini
+- **Multi-LLM Support**: Works with OpenAI GPT-4, Anthropic Claude, Google Gemini, and OpenRouter (unified access to 200+ models)
 - **GitLab Integration**: Seamless webhook-based integration with any self-hosted GitLab instance
 - **Comprehensive Analysis**: Security, performance, correctness, and maintainability reviews
 - **Standards-Based Rule Engine**: Dynamic rule fetching from OWASP, NIST, Python PEPs, and framework documentation
@@ -53,7 +53,7 @@ src/
 ├── exceptions.py              # Custom exception hierarchy for structured error handling
 ├── agents/
 │   ├── code_reviewer.py       # PydanticAI review agent with Context7 MCP tools
-│   ├── providers.py           # Multi-LLM provider support (OpenAI, Anthropic, Google)
+│   ├── providers.py           # Multi-LLM provider support (OpenAI, Anthropic, Google, OpenRouter)
 │   └── tools/                 # Simplified Context7-based validation system
 │       ├── base.py            # Base tool framework with caching and language context
 │       ├── registry.py        # Tool registry with language-aware routing and parallel execution
@@ -82,7 +82,7 @@ src/
 
 - Python 3.11+
 - GitLab instance (self-hosted or gitlab.com)
-- At least one AI provider API key (OpenAI, Anthropic, or Google)
+- At least one AI provider API key (OpenAI, Anthropic, Google, or OpenRouter)
 
 ### Installation
 
@@ -134,6 +134,7 @@ src/
 | `OPENAI_API_KEY` | OpenAI API key | Conditional | - |
 | `ANTHROPIC_API_KEY` | Anthropic API key | Conditional | - |
 | `GOOGLE_API_KEY` | Google AI API key | Conditional | - |
+| `OPENROUTER_API_KEY` | OpenRouter API key | Conditional | - |
 
 ### Standards-Based Rule Engine Configuration
 
@@ -194,7 +195,8 @@ src/
 - `openai:gpt-4o` - OpenAI GPT-4 Omni
 - `anthropic:claude-3-5-sonnet` - Anthropic Claude 3.5 Sonnet
 - `gemini:gemini-2.5-pro` - Google Gemini 2.5 Pro
-- `fallback` - Use multiple providers with fallback (OpenAI, Anthropic, Google)
+- `openrouter:openai/gpt-4o` - OpenRouter (access to 200+ models including OpenAI, Anthropic, Google, Meta, and more)
+- `fallback` - Use multiple providers with fallback (OpenAI, Anthropic, Google, OpenRouter)
 
 ### GitLab Setup
 

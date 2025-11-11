@@ -75,6 +75,11 @@ class Settings(BaseSettings):
     gemini_model_name: str = Field(default="gemini-2.5-pro")
     google_base_url: Optional[str] = Field(default=None)
 
+    # OpenRouter Configuration
+    openrouter_api_key: Optional[str] = Field(default=None)
+    openrouter_model_name: str = Field(default="openai/gpt-4o")
+    openrouter_base_url: str = Field(default="https://openrouter.ai/api/v1")
+
     # Security
     allowed_origins: List[str] = Field(
         default_factory=lambda: []  # Empty by default, requires explicit configuration

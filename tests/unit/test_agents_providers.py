@@ -12,6 +12,7 @@ from src.agents.providers import (
     get_google_model,
     get_llm_model,
     get_openai_model,
+    get_openrouter_model,
 )
 from src.exceptions import AIProviderException, ConfigurationException
 
@@ -39,6 +40,14 @@ class TestGetLLMModel:
     def test_get_llm_model_google(self):
         """Test Google model creation"""
         model = get_llm_model("gemini:gemini-1.5-pro")
+        # The actual implementation returns PydanticAI models
+        assert model is not None
+        assert hasattr(model, "model_name") or hasattr(model, "name")
+
+    @patch.dict(os.environ, {"OPENROUTER_API_KEY": "test-key"})
+    def test_get_llm_model_openrouter(self):
+        """Test OpenRouter model creation"""
+        model = get_llm_model("openrouter:openai/gpt-4o")
         # The actual implementation returns PydanticAI models
         assert model is not None
         assert hasattr(model, "model_name") or hasattr(model, "name")
@@ -118,6 +127,7 @@ class TestGetLLMModel:
             "OPENAI_API_KEY": "openai-key",
             "ANTHROPIC_API_KEY": "anthropic-key",
             "GOOGLE_API_KEY": "google-key",
+            "OPENROUTER_API_KEY": "openrouter-key",
         },
     )
     def test_fallback_model_creation(self):
@@ -165,6 +175,14 @@ class TestIndividualProviders:
         model = get_google_model()
         assert model is not None
         # Should return a PydanticAI GoogleModel
+        assert hasattr(model, "model_name") or hasattr(model, "name")
+
+    @patch.dict(os.environ, {"OPENROUTER_API_KEY": "test-key"})
+    def test_get_openrouter_model(self):
+        """Test OpenRouter model creation function"""
+        model = get_openrouter_model()
+        assert model is not None
+        # Should return a PydanticAI OpenAIModel (OpenRouter is OpenAI-compatible)
         assert hasattr(model, "model_name") or hasattr(model, "name")
 
     @patch("src.agents.providers.get_settings")
@@ -224,6 +242,25 @@ class TestIndividualProviders:
             with pytest.raises((AIProviderException, ConfigurationException)):
                 get_google_model()
 
+    @patch("src.agents.providers.get_settings")
+    def test_get_openrouter_model_without_key(self, mock_get_settings):
+        """Test OpenRouter model creation without API key"""
+        # Mock settings with no API key
+        mock_settings = type(
+            "Settings",
+            (),
+            {
+                "openrouter_api_key": None,
+                "openrouter_model_name": "openai/gpt-4o",
+                "openrouter_base_url": "https://openrouter.ai/api/v1",
+            },
+        )()
+        mock_get_settings.return_value = mock_settings
+
+        with patch.dict(os.environ, {}, clear=True):
+            with pytest.raises((AIProviderException, ConfigurationException)):
+                get_openrouter_model()
+
 
 class TestErrorHandling:
     """Test error handling scenarios"""
@@ -239,12 +276,15 @@ class TestErrorHandling:
                 "openai_api_key": None,
                 "anthropic_api_key": None,
                 "google_api_key": None,
+                "openrouter_api_key": None,
                 "openai_model_name": "gpt-4o",
                 "anthropic_model_name": "claude-3-5-sonnet-latest",
                 "gemini_model_name": "gemini-2.5-pro",
+                "openrouter_model_name": "openai/gpt-4o",
                 "openai_base_url": None,
                 "anthropic_base_url": None,
                 "google_base_url": None,
+                "openrouter_base_url": "https://openrouter.ai/api/v1",
             },
         )()
         mock_get_settings.return_value = mock_settings
